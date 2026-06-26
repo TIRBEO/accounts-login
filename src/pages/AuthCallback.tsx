@@ -1,63 +1,94 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
-import { toAppSession, redirectWithSession } from "@/lib/auth";
+import { toAppSession, redirectWithSession, DASHBOARD_URL } from "@/lib/auth";
 
 type Status = "exchanging" | "success" | "error";
 
 export default function AuthCallback() {
-  const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<Status>("exchanging");
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
+
     const handleCallback = async () => {
-      // Try PKCE code exchange first (code passed by Supabase in query string)
-      const code = searchParams.get("code");
+      // Check URL hash first (Supabase uses #access_token=... after OAuth)
+      const hash = window.location.hash;
+      const params = new URLSearchParams(window.location.search);
+
+      // If no code in query and no hash, Supabase client should have already
+      // processed the hash during createClient(). Listen for auth state change.
+      const code = params.get("code");
 
       if (code) {
+        // PKCE flow
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
         if (exchangeError) {
-          setStatus("error");
-          setError(exchangeError.message);
+          if (!cancelled) { setStatus("error"); setError(exchangeError.message); }
           return;
         }
+      } else if (hash && hash.includes("access_token")) {
+        // Hash flow — supabase-js picks this up automatically,
+        // but we wait a tick for it to process
+        await new Promise((r) => setTimeout(r, 300));
       }
 
-      // Get session (handles both PKCE-exchanged sessions and hash-based implicit flow)
+      // Get session (handles PKCE, hash, and existing sessions)
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session) {
-        setStatus("error");
-        setError(code ? "Failed to retrieve session after code exchange" : "No authorization code received. Make sure the redirect URIs are configured correctly in your Google Cloud Console and Supabase dashboard.");
+        // Try onAuthStateChange as fallback — sometimes the session isn't ready yet
+        const timeout = setTimeout(() => {
+          if (!cancelled) {
+            setStatus("error");
+            setError(
+              code
+                ? "Failed to retrieve session after code exchange."
+                : "No session received. Check your Supabase Authentication settings — Site URL must be set to this app's URL and the Redirect URLs must include this page."
+            );
+          }
+        }, 5000);
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          if (event === "SIGNED_IN" && session) {
+            clearTimeout(timeout);
+            subscription.unsubscribe();
+            handleSuccess(session);
+          }
+        });
+
         return;
       }
 
+      handleSuccess(session);
+    };
+
+    const handleSuccess = async (session: any) => {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) {
-        setStatus("error");
-        setError("Failed to retrieve user");
+        if (!cancelled) { setStatus("error"); setError("Failed to retrieve user"); }
         return;
       }
 
       const appSession = toAppSession(user, session);
-
       const redirectTo = sessionStorage.getItem("oauth_redirect_to");
       sessionStorage.removeItem("oauth_redirect_to");
 
-      setStatus("success");
+      if (!cancelled) { setStatus("success"); }
 
       setTimeout(() => {
         if (redirectTo) {
           redirectWithSession(redirectTo, appSession);
         } else {
-          window.location.href = "/settings";
+          window.location.href = DASHBOARD_URL;
         }
       }, 800);
     };
 
     handleCallback();
-  }, [searchParams]);
+
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <motion.div
