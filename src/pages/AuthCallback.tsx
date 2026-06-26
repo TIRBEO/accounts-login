@@ -40,11 +40,6 @@ export default function AuthCallback() {
         return;
       }
 
-      // Merge accounts: if this is a new OAuth identity but the email already exists,
-      // Supabase's automatic account linking handles it when enabled.
-      const identities = user.identities ?? [];
-      const isNewIdentity = identities.some((id) => id.provider !== "email");
-
       const appSession = toAppSession(user, session);
 
       const redirectTo = sessionStorage.getItem("oauth_redirect_to");
