@@ -1,0 +1,270 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --radius: 0.75rem;
+  --shadow-soft: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lift: 0 20px 60px -12px rgba(0, 0, 0, 0.25);
+  --font-display: "Fraunces", serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --color-clay: oklch(0.52 0.08 22.5);
+  --color-moss: oklch(0.55 0.07 147.5);
+  --color-brand: oklch(0.63 0.18 260);
+  --color-brand-glow: oklch(0.55 0.22 260 / 0.3);
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: oklch(0 0 0);
+  --foreground: oklch(0.97 0 0);
+  --card: oklch(0.05 0 0);
+  --card-foreground: oklch(0.97 0 0);
+  --popover: oklch(0.07 0 0);
+  --popover-foreground: oklch(0.97 0 0);
+  --primary: oklch(0.97 0 0);
+  --primary-foreground: oklch(0 0 0);
+  --secondary: oklch(0.12 0 0);
+  --secondary-foreground: oklch(0.97 0 0);
+  --muted: oklch(0.1 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: oklch(0.12 0 0);
+  --accent-foreground: oklch(0.97 0 0);
+  --destructive: oklch(0.45 0.18 27);
+  --destructive-foreground: oklch(0.97 0 0);
+  --border: oklch(0.14 0 0);
+  --input: oklch(0.14 0 0);
+  --ring: oklch(0.24 0 0);
+  --ink: oklch(0.97 0 0);
+  --ink-soft: oklch(0.5 0 0);
+}
+
+/* ── Base ── */
+html { scroll-behavior: smooth; }
+body {
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Autofill override ── */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px oklch(0.06 0 0) inset !important;
+  -webkit-text-fill-color: oklch(0.97 0 0) !important;
+  caret-color: oklch(0.97 0 0);
+  border-radius: 0.625rem;
+}
+
+/* ── Glass card ── */
+.glass-card {
+  position: relative;
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  background: oklch(0.03 0 0 / 0.55);
+  border: 1px solid oklch(0.18 0 0 / 0.4);
+  box-shadow:
+    0 0 0 1px oklch(0.3 0 0 / 0.08) inset,
+    0 1px 0 0 oklch(1 0 0 / 0.03) inset,
+    0 20px 60px -12px rgba(0, 0, 0, 0.4);
+}
+
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    145deg,
+    oklch(0.35 0 0 / 0.25) 0%,
+    oklch(0.5 0.12 260 / 0.06) 40%,
+    oklch(0.3 0 0 / 0.15) 70%,
+    oklch(0.35 0 0 / 0.08) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ── Glass input ── */
+.glass-input {
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  background: oklch(0.06 0 0 / 0.6);
+  border: 1px solid oklch(0.18 0 0 / 0.5);
+  box-shadow: 0 1px 0 0 oklch(1 0 0 / 0.02) inset;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.glass-input:hover {
+  border-color: oklch(0.25 0 0 / 0.5);
+  background: oklch(0.07 0 0 / 0.6);
+}
+
+.glass-input:focus,
+.glass-input:focus-within {
+  outline: none;
+  border-color: oklch(0.63 0.18 260 / 0.35);
+  background: oklch(0.08 0 0 / 0.6);
+  box-shadow:
+    0 0 0 1px oklch(0.63 0.18 260 / 0.15),
+    0 0 24px oklch(0.55 0.22 260 / 0.06),
+    0 1px 0 0 oklch(1 0 0 / 0.02) inset;
+}
+
+.glass-input.error {
+  border-color: oklch(0.45 0.18 27 / 0.4);
+}
+.glass-input.error:focus,
+.glass-input.error:focus-within {
+  border-color: oklch(0.45 0.18 27 / 0.5);
+  box-shadow:
+    0 0 0 1px oklch(0.45 0.18 27 / 0.2),
+    0 0 24px oklch(0.4 0.15 27 / 0.06);
+}
+
+/* ── Glass button ── */
+.glass-button {
+  position: relative;
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.glass-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.glass-button-primary {
+  background: linear-gradient(135deg, oklch(0.97 0 0) 0%, oklch(0.88 0.01 0) 100%);
+  color: oklch(0 0 0);
+  box-shadow: 0 1px 2px 0 oklch(0 0 0 / 0.3), 0 0 0 1px oklch(1 0 0 / 0.06) inset;
+}
+.glass-button-primary:hover {
+  box-shadow: 0 2px 8px 0 oklch(0 0 0 / 0.3), 0 0 0 1px oklch(1 0 0 / 0.08) inset;
+  transform: translateY(-1px);
+}
+.glass-button-primary:active {
+  transform: translateY(0px) scale(0.99);
+}
+
+.glass-button-secondary {
+  background: oklch(0.1 0 0 / 0.6);
+  border: 1px solid oklch(0.2 0 0 / 0.5);
+  color: oklch(0.97 0 0);
+  box-shadow: 0 1px 0 0 oklch(1 0 0 / 0.02) inset;
+}
+.glass-button-secondary:hover {
+  background: oklch(0.14 0 0 / 0.6);
+  border-color: oklch(0.3 0 0 / 0.5);
+}
+
+/* ── Focus ring ── */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px oklch(0.63 0.18 260 / 0.3), 0 0 0 4px oklch(0.55 0.22 260 / 0.08);
+  border-radius: 0.5rem;
+}
+
+/* ── Shimmer loading ── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.25 0 0 / 0.3) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ── Pulse glow ── */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.05); }
+}
+
+/* ── Smooth transitions ── */
+* {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* ── OTP digit boxes ── */
+.otp-group {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.otp-input {
+  width: 2.75rem;
+  height: 3.25rem;
+  text-align: center;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.25rem;
+  border-radius: 0.625rem;
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  background: oklch(0.06 0 0 / 0.6);
+  border: 1px solid oklch(0.18 0 0 / 0.5);
+  color: oklch(0.97 0 0);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.otp-input:hover {
+  border-color: oklch(0.25 0 0 / 0.5);
+}
+.otp-input:focus {
+  border-color: oklch(0.63 0.18 260 / 0.35);
+  box-shadow: 0 0 0 1px oklch(0.63 0.18 260 / 0.15), 0 0 24px oklch(0.55 0.22 260 / 0.06);
+}
+.otp-input.filled {
+  border-color: oklch(0.28 0 0);
+  background: oklch(0.09 0 0);
+}

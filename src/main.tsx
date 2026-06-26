@@ -1,0 +1,31 @@
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import "./styles.css";
+import AccountsLayout from "./App";
+import LoginPage from "./pages/LoginPage";
+import SignUpPage from "./pages/SignUpPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
+import SettingsPage from "./pages/SettingsPage";
+import AuthCallback from "./pages/AuthCallback";
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <BrowserRouter>
+      <Routes>
+        <Route element={<AccountsLayout />}>
+          <Route index element={<LoginPage />} />
+          <Route path="login" element={<LoginPage />} />
+          <Route path="signup" element={<SignUpPage />} />
+          <Route path="forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="reset-password/:token" element={<ResetPasswordPage />} />
+          <Route path="verify-email" element={<VerifyEmailPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="auth/callback" element={<AuthCallback />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  </StrictMode>,
+);
