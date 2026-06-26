@@ -12,6 +12,9 @@ const ALLOWED_HOSTS = [
   "about.tirbeo.com",
   "docs.tirbeo.com",
   "blog.tirbeo.com",
+  "tirbeo.bishnuneupane13.com.np",
+  "dashboard.tirbeo.bishnuneupane13.com.np",
+  "vercel.app",
 ];
 
 export interface AppSession {

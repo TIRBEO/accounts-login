@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
@@ -10,7 +10,7 @@ import Input from "@/components/Input";
 import Button from "@/components/Button";
 import SocialButtons from "@/components/SocialButtons";
 import PasswordStrength from "@/components/PasswordStrength";
-import { getRedirectParam, getQs, DASHBOARD_URL } from "@/lib/auth";
+import { getRedirectParam, getQs } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 
 const schema = z
@@ -50,12 +50,6 @@ export default function SignUpPage() {
 
   const redirectTo = getRedirectParam();
   const qs = getQs(redirectTo);
-
-  useEffect(() => {
-    if (!redirectTo) {
-      window.location.href = DASHBOARD_URL;
-    }
-  }, []);
 
   const {
     register,

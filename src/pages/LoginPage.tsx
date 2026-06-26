@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
@@ -27,12 +27,6 @@ export default function LoginPage() {
 
   const redirectTo = getRedirectParam();
   const qs = getQs(redirectTo);
-
-  useEffect(() => {
-    if (!redirectTo) {
-      window.location.href = DASHBOARD_URL;
-    }
-  }, []);
 
   const {
     register,
