@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
@@ -9,7 +9,7 @@ import AuthCard from "@/components/AuthCard";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import SocialButtons from "@/components/SocialButtons";
-import { getRedirectParam, getQs, redirectWithSession, toAppSession } from "@/lib/auth";
+import { getRedirectParam, getQs, redirectWithSession, toAppSession, DASHBOARD_URL } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 
 const schema = z.object({
@@ -27,6 +27,12 @@ export default function LoginPage() {
 
   const redirectTo = getRedirectParam();
   const qs = getQs(redirectTo);
+
+  useEffect(() => {
+    if (!redirectTo) {
+      window.location.href = DASHBOARD_URL;
+    }
+  }, []);
 
   const {
     register,
@@ -66,11 +72,7 @@ export default function LoginPage() {
 
     const appSession = toAppSession(authData.user, authData.session);
 
-    if (redirectTo) {
-      redirectWithSession(redirectTo, appSession);
-    } else {
-      window.location.href = "/settings";
-    }
+    redirectWithSession(redirectTo || DASHBOARD_URL, appSession);
   };
 
   return (

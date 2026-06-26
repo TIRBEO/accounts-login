@@ -26,6 +26,10 @@ export interface AppSession {
   expiresAt: number;
 }
 
+export const DASHBOARD_URL = window.location.hostname === "localhost"
+  ? "http://localhost:5176"
+  : "https://dashboard.tirbeo.com";
+
 export function isValidRedirect(redirectTo: string): boolean {
   try {
     const url = new URL(redirectTo);

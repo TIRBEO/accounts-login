@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, type KeyboardEvent, type ClipboardEvent } 
 import { Link, useSearchParams } from "react-router-dom";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { DASHBOARD_URL } from "@/lib/auth";
 import AuthCard from "@/components/AuthCard";
 import Button from "@/components/Button";
 
@@ -127,8 +128,8 @@ export default function VerifyEmailPage() {
           <p className="text-sm text-ink-soft">
             You can now access all Tirbeo services with your account.
           </p>
-          <Button fullWidth onClick={() => window.location.href = redirectTo || "/login"}>
-            {redirectTo ? "Continue" : "Go to Sign In"}
+          <Button fullWidth onClick={() => window.location.href = redirectTo || DASHBOARD_URL}>
+            Continue
           </Button>
         </div>
       </AuthCard>
