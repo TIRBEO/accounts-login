@@ -1,6 +1,7 @@
-import { useState, useRef, type KeyboardEvent, type ClipboardEvent } from "react";
+import { useState, useRef, useEffect, type KeyboardEvent, type ClipboardEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import AuthCard from "@/components/AuthCard";
 import Button from "@/components/Button";
 
@@ -8,6 +9,7 @@ const DIGITS = 6;
 
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
+  const email = searchParams.get("email");
   const redirectTo = searchParams.get("redirect_to");
   const qs = redirectTo ? `?redirect_to=${encodeURIComponent(redirectTo)}` : "";
 
@@ -17,6 +19,12 @@ export default function VerifyEmailPage() {
   const [resending, setResending] = useState(false);
   const [error, setError] = useState("");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    if (!email) {
+      setError("No email address provided. Please sign up again.");
+    }
+  }, [email]);
 
   const handleChange = (index: number, value: string) => {
     if (!/^\d?$/.test(value)) return;
@@ -57,6 +65,10 @@ export default function VerifyEmailPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email) {
+      setError("No email address provided");
+      return;
+    }
     const code = digits.join("");
     if (code.length !== DIGITS) {
       setError("Please enter all 6 digits");
@@ -64,9 +76,45 @@ export default function VerifyEmailPage() {
     }
     setLoading(true);
     setError("");
-    await new Promise((r) => setTimeout(r, 1500));
+
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email,
+      token: code,
+      type: "email",
+    });
+
+    if (verifyError) {
+      if (verifyError.message.includes("expired") || verifyError.message.includes("Token has expired")) {
+        setError("Code has expired. Request a new one.");
+      } else if (verifyError.message.includes("Invalid") || verifyError.message.includes("otp")) {
+        setError("Invalid code. Check the code and try again.");
+      } else {
+        setError(verifyError.message);
+      }
+      setLoading(false);
+      return;
+    }
+
     setLoading(false);
     setVerified(true);
+  };
+
+  const handleResend = async () => {
+    if (!email) return;
+    setResending(true);
+    setError("");
+
+    const { error: sendError } = await supabase.auth.signInWithOtp({ email });
+
+    if (sendError) {
+      setError(sendError.message);
+      setResending(false);
+      return;
+    }
+
+    setDigits(Array(DIGITS).fill(""));
+    inputRefs.current[0]?.focus();
+    setResending(false);
   };
 
   if (verified) {
@@ -79,13 +127,9 @@ export default function VerifyEmailPage() {
           <p className="text-sm text-ink-soft">
             You can now access all Tirbeo services with your account.
           </p>
-          {redirectTo ? (
-            <Button fullWidth onClick={() => window.location.href = redirectTo}>
-              Continue
-            </Button>
-          ) : (
-            <Button fullWidth>Continue to Dashboard</Button>
-          )}
+          <Button fullWidth onClick={() => window.location.href = redirectTo || "/login"}>
+            {redirectTo ? "Continue" : "Go to Sign In"}
+          </Button>
         </div>
       </AuthCard>
     );
@@ -97,6 +141,13 @@ export default function VerifyEmailPage() {
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand/10">
           <Mail className="h-6 w-6" style={{ color: "oklch(0.63 0.18 260)" }} />
         </div>
+
+        {email && (
+          <p className="text-center text-sm text-ink-soft">
+            We sent a code to{" "}
+            <span className="font-medium text-foreground">{email}</span>
+          </p>
+        )}
 
         <div className="otp-group">
           {digits.map((d, i) => (
@@ -127,11 +178,7 @@ export default function VerifyEmailPage() {
       <div className="mt-4 flex flex-col items-center gap-2 text-sm">
         <button
           type="button"
-          onClick={async () => {
-            setResending(true);
-            await new Promise((r) => setTimeout(r, 1000));
-            setResending(false);
-          }}
+          onClick={handleResend}
           disabled={resending}
           className="text-ink-soft underline-offset-2 hover:text-foreground hover:underline disabled:opacity-50"
         >

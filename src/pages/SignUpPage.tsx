@@ -10,7 +10,7 @@ import Input from "@/components/Input";
 import Button from "@/components/Button";
 import SocialButtons from "@/components/SocialButtons";
 import PasswordStrength from "@/components/PasswordStrength";
-import { getRedirectParam, getQs, redirectWithSession, toAppSession } from "@/lib/auth";
+import { getRedirectParam, getQs } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 
 const schema = z
@@ -97,16 +97,18 @@ export default function SignUpPage() {
       return;
     }
 
-    if (authData.session) {
-      const appSession = toAppSession(authData.user, authData.session);
-      if (redirectTo) {
-        redirectWithSession(redirectTo, appSession);
-      } else {
-        window.location.href = "/settings";
-      }
-    } else {
-      window.location.href = `/verify-email?email=${encodeURIComponent(data.email)}${qs}`;
+    // Send 6-digit OTP to their email for verification
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email: data.email,
+    });
+
+    if (otpError) {
+      setError(otpError.message);
+      setLoading(false);
+      return;
     }
+
+    window.location.href = `/verify-email?email=${encodeURIComponent(data.email)}${qs}`;
   };
 
   const handleNext = async () => {
