@@ -68,9 +68,18 @@ export default function SignUpPage() {
     setLoading(true);
     setError("");
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    sessionStorage.setItem(
+      "pending_signup",
+      JSON.stringify({
+        email: data.email,
+        password: data.password,
+        username: data.username,
+        displayName: data.displayName,
+      })
+    );
+
+    const { error: otpError } = await supabase.auth.signInWithOtp({
       email: data.email,
-      password: data.password,
       options: {
         data: {
           username: data.username,
@@ -79,36 +88,20 @@ export default function SignUpPage() {
       },
     });
 
-    if (authError) {
-      if (authError.message.includes("already registered") || authError.message.includes("already exists")) {
+    if (otpError) {
+      sessionStorage.removeItem("pending_signup");
+      if (otpError.message.includes("already registered") || otpError.message.includes("already exists")) {
         setError(
           "An account with this email already exists. If you signed up with Google, GitHub, or Discord, try signing in with that method instead."
         );
       } else {
-        setError(authError.message);
+        setError(otpError.message);
       }
       setLoading(false);
       return;
     }
 
-    if (!authData.user) {
-      setError("Sign up failed. Please try again.");
-      setLoading(false);
-      return;
-    }
-
-    // Send 6-digit OTP to their email for verification
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email: data.email,
-    });
-
-    if (otpError) {
-      setError(otpError.message);
-      setLoading(false);
-      return;
-    }
-
-    window.location.href = `/verify-email?email=${encodeURIComponent(data.email)}${qs}`;
+    window.location.href = `/verify-email?email=${encodeURIComponent(data.email)}&mode=signup${qs}`;
   };
 
   const handleNext = async () => {

@@ -14,6 +14,7 @@ const ALLOWED_HOSTS = [
   "blog.tirbeo.com",
   "tirbeo.bishnuneupane13.com.np",
   "dashboard.tirbeo.bishnuneupane13.com.np",
+  "account.tirbeo.bishnuneupane13.com.np",
   "vercel.app",
 ];
 

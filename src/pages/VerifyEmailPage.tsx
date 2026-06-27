@@ -11,12 +11,14 @@ const DIGITS = 6;
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
   const email = searchParams.get("email");
+  const mode = searchParams.get("mode");
   const redirectTo = searchParams.get("redirect_to");
   const qs = redirectTo ? `?redirect_to=${encodeURIComponent(redirectTo)}` : "";
 
   const [digits, setDigits] = useState<string[]>(Array(DIGITS).fill(""));
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [settingPassword, setSettingPassword] = useState(false);
   const [resending, setResending] = useState(false);
   const [error, setError] = useState("");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -96,6 +98,23 @@ export default function VerifyEmailPage() {
       return;
     }
 
+    if (mode === "signup") {
+      setSettingPassword(true);
+      const pending = sessionStorage.getItem("pending_signup");
+      if (pending) {
+        const { password } = JSON.parse(pending);
+        const { error: pwError } = await supabase.auth.updateUser({ password });
+        if (pwError) {
+          setError(pwError.message);
+          setSettingPassword(false);
+          setLoading(false);
+          return;
+        }
+        sessionStorage.removeItem("pending_signup");
+      }
+      setSettingPassword(false);
+    }
+
     setLoading(false);
     setVerified(true);
   };
@@ -172,7 +191,7 @@ export default function VerifyEmailPage() {
         {error && <p className="text-center text-xs text-destructive">{error}</p>}
 
         <Button type="submit" fullWidth loading={loading}>
-          Verify Email
+          {settingPassword ? "Setting up your account..." : "Verify Email"}
         </Button>
       </form>
 

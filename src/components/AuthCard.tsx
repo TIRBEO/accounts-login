@@ -60,7 +60,7 @@ export default function AuthCard({ children, title, subtitle }: AuthCardProps) {
               transition={{ duration: 0.5, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center overflow-hidden">
-                <img src="/logo.png" alt="Tirbeo" className="h-14 w-14 object-contain" />
+                <img src="/logo.png" alt="Tirbeo" className="h-14 w-14 object-contain brightness-0 invert" />
               </div>
 
               <motion.div

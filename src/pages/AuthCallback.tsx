@@ -142,7 +142,7 @@ export default function AuthCallback() {
             className="mb-7 text-center"
           >
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center overflow-hidden">
-              <img src="/logo.png" alt="Tirbeo" className="h-14 w-14 object-contain" />
+              <img src="/logo.png" alt="Tirbeo" className="h-14 w-14 object-contain brightness-0 invert" />
             </div>
             <motion.div
               initial={{ width: 0 }}
