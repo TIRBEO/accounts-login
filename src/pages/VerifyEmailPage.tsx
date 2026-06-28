@@ -124,7 +124,13 @@ export default function VerifyEmailPage() {
     setResending(true);
     setError("");
 
-    const { error: sendError } = await supabase.auth.signInWithOtp({ email });
+    const { error: sendError } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: `${window.location.origin}/auth/callback?mode=signup`,
+      },
+    });
 
     if (sendError) {
       setError(sendError.message);

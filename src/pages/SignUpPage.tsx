@@ -81,6 +81,8 @@ export default function SignUpPage() {
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email: data.email,
       options: {
+        shouldCreateUser: true,
+        emailRedirectTo: `${window.location.origin}/auth/callback?mode=signup`,
         data: {
           username: data.username,
           display_name: data.displayName,

@@ -8,66 +8,71 @@ type Status = "exchanging" | "success" | "error";
 export default function AuthCallback() {
   const [status, setStatus] = useState<Status>("exchanging");
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     let cancelled = false;
 
     const handleCallback = async () => {
-      // Check URL hash first (Supabase uses #access_token=... after OAuth)
       const hash = window.location.hash;
       const params = new URLSearchParams(window.location.search);
-
-      // If no code in query and no hash, Supabase client should have already
-      // processed the hash during createClient(). Listen for auth state change.
+      const mode = params.get("mode");
       const code = params.get("code");
 
       if (code) {
-        // PKCE flow
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
         if (exchangeError) {
           if (!cancelled) { setStatus("error"); setError(exchangeError.message); }
           return;
         }
       } else if (hash && hash.includes("access_token")) {
-        // Hash flow — supabase-js picks this up automatically,
-        // but we wait a tick for it to process
         await new Promise((r) => setTimeout(r, 300));
-      }
-
-      // Get session (handles PKCE, hash, and existing sessions)
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        // Try onAuthStateChange as fallback — sometimes the session isn't ready yet
-        const timeout = setTimeout(() => {
-          if (!cancelled) {
-            setStatus("error");
-            setError(
-              code
-                ? "Failed to retrieve session after code exchange."
-                : "No session received. Check your Supabase Authentication settings — Site URL must be set to this app's URL and the Redirect URLs must include this page."
-            );
-          }
-        }, 5000);
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-          if (event === "SIGNED_IN" && session) {
-            clearTimeout(timeout);
-            subscription.unsubscribe();
-            handleSuccess(session);
-          }
-        });
-
+      } else {
+        if (!cancelled) { setStatus("error"); setError("No authorization code or token found."); }
         return;
       }
 
-      handleSuccess(session);
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        const timeout = setTimeout(() => {
+          if (!cancelled) {
+            setStatus("error");
+            setError("No session received. Check Supabase Auth settings — Site URL and Redirect URLs must include this page.");
+          }
+        }, 5000);
+
+        supabase.auth.onAuthStateChange((event, session) => {
+          if (event === "SIGNED_IN" && session) {
+            clearTimeout(timeout);
+            handleSuccess(session, mode);
+          }
+        });
+        return;
+      }
+
+      handleSuccess(session, mode);
     };
 
-    const handleSuccess = async (session: any) => {
+    const handleSuccess = async (session: any, mode: string | null) => {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) {
         if (!cancelled) { setStatus("error"); setError("Failed to retrieve user"); }
         return;
+      }
+
+      // Handle signup via magic link — set the pending password
+      if (mode === "signup") {
+        const pending = sessionStorage.getItem("pending_signup");
+        if (pending) {
+          setMessage("Setting up your account...");
+          const { password } = JSON.parse(pending);
+          const { error: pwError } = await supabase.auth.updateUser({ password });
+          if (pwError) {
+            if (!cancelled) { setStatus("error"); setError(pwError.message); }
+            return;
+          }
+          sessionStorage.removeItem("pending_signup");
+        }
       }
 
       const appSession = toAppSession(user, session);
@@ -86,7 +91,6 @@ export default function AuthCallback() {
     };
 
     handleCallback();
-
     return () => { cancelled = true; };
   }, []);
 
@@ -97,7 +101,6 @@ export default function AuthCallback() {
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="w-full max-w-md"
     >
-      {/* Deep ambient glow behind card */}
       <div
         aria-hidden
         className="pointer-events-none absolute -inset-8 rounded-[2rem] opacity-40 blur-3xl"
@@ -109,7 +112,6 @@ export default function AuthCallback() {
         }}
       />
       <div className="glass-card relative overflow-hidden rounded-2xl p-8 shadow-2xl">
-        {/* Animated gradient orbs */}
         <motion.div
           aria-hidden
           className="pointer-events-none absolute -top-32 left-1/2 h-56 w-[110%] -translate-x-1/2 blur-[80px]"
@@ -134,7 +136,6 @@ export default function AuthCallback() {
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
         />
         <div className="relative z-10">
-          {/* Logo */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -152,7 +153,6 @@ export default function AuthCallback() {
             />
           </motion.div>
 
-          {/* Status content */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -164,7 +164,7 @@ export default function AuthCallback() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                <p className="mt-4 text-sm text-ink-soft">Completing sign in...</p>
+                <p className="mt-4 text-sm text-ink-soft">{message || "Completing sign in..."}</p>
               </div>
             )}
 
@@ -190,16 +190,10 @@ export default function AuthCallback() {
                 <p className="mt-4 text-sm font-medium text-foreground">Sign in failed</p>
                 <p className="mt-1 text-xs text-destructive">{error}</p>
                 <div className="mt-4 flex justify-center gap-3">
-                  <a
-                    href="/login"
-                    className="rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background hover:bg-foreground/90"
-                  >
+                  <a href="/login" className="rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background hover:bg-foreground/90">
                     Try again
                   </a>
-                  <a
-                    href="/"
-                    className="rounded-lg border border-border px-4 py-2 text-sm text-ink-soft hover:text-foreground"
-                  >
+                  <a href="/" className="rounded-lg border border-border px-4 py-2 text-sm text-ink-soft hover:text-foreground">
                     Go home
                   </a>
                 </div>

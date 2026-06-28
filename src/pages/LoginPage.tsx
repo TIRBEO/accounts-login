@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
@@ -24,9 +24,27 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [, setCheckingAuth] = useState(true);
 
   const redirectTo = getRedirectParam();
   const qs = getQs(redirectTo);
+
+  // Auto-redirect if already logged in (SSO support)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+          if (user) {
+            redirectWithSession(redirectTo || DASHBOARD_URL, toAppSession(user, session));
+          } else {
+            setCheckingAuth(false);
+          }
+        });
+      } else {
+        setCheckingAuth(false);
+      }
+    });
+  }, []);
 
   const {
     register,
