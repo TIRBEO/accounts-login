@@ -9,6 +9,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import AuthCallback from "./pages/AuthCallback";
+import SettingsPage from "./pages/SettingsPage";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -22,6 +23,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="reset-password/:token" element={<ResetPasswordPage />} />
           <Route path="verify-email" element={<VerifyEmailPage />} />
           <Route path="auth/callback" element={<AuthCallback />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
